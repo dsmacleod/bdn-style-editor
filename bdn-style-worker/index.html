@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BDN Style Editor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='25' cy='75' r='12' fill='none' stroke='%23228B22' stroke-width='7'/%3E%3Ccircle cx='25' cy='25' r='12' fill='none' stroke='%23228B22' stroke-width='7'/%3E%3Cline x1='33' y1='67' x2='80' y2='20' stroke='%23228B22' stroke-width='7' stroke-linecap='round'/%3E%3Cline x1='33' y1='33' x2='80' y2='80' stroke='%23228B22' stroke-width='7' stroke-linecap='round'/%3E%3Cline x1='57' y1='43' x2='80' y2='20' stroke='%23228B22' stroke-width='7' stroke-linecap='round'/%3E%3Cline x1='57' y1='57' x2='80' y2='80' stroke='%23228B22' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E" type="image/svg+xml">
+<style>
+  :root {
+    --navy: #003366;
+    --navy-light: #004488;
+    --red: #c0392b;
+    --red-bg: #fde8e6;
+    --yellow: #b8860b;
+    --yellow-bg: #fef9e7;
+    --blue: #2471a3;
+    --blue-bg: #e8f0fe;
+    --gray-light: #f5f5f5;
+    --gray-border: #ddd;
+    --text: #222;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    color: var(--text);
+    background: var(--gray-light);
+    line-height: 1.6;
+  }
+
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  header h1 span {
+    font-weight: 400;
+    opacity: 0.8;
+  }
+
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+
+  /* Input section */
+  .input-section {
+    background: #fff;
+    border: 1px solid var(--gray-border);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .input-section h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: var(--navy);
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 1rem;
+    border: 1px solid var(--gray-border);
+    border-radius: 4px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1rem;
+    line-height: 1.7;
+    resize: vertical;
+    color: var(--text);
+  }
+
+  textarea:focus { outline: 2px solid var(--navy-light); border-color: var(--navy-light); }
+
+  .btn-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .btn-analyze {
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    padding: 0.65rem 2rem;
+    font-size: 1rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-analyze:hover { background: var(--navy-light); }
+  .btn-analyze:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .spinner {
+    display: none;
+    width: 22px;
+    height: 22px;
+    border: 3px solid var(--gray-border);
+    border-top-color: var(--navy);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  .spinner.active { display: inline-block; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .status-msg {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.85rem;
+    color: #666;
+  }
+
+  /* Results layout */
+  .results {
+    display: none;
+    gap: 1.5rem;
+  }
+
+  .results.visible {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+  }
+
+  .text-panel, .issues-panel {
+    background: #fff;
+    border: 1px solid var(--gray-border);
+    border-radius: 6px;
+    padding: 1.5rem;
+  }
+
+  .text-panel h2, .issues-panel h2 {
+    font-size: 1.1rem;
+    color: var(--navy);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--navy);
+  }
+
+  .text-display {
+    font-size: 1rem;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .highlight {
+    cursor: pointer;
+    border-radius: 2px;
+    padding: 1px 2px;
+    transition: outline 0.15s;
+  }
+
+  .highlight:hover { outline: 2px solid currentColor; }
+
+  .highlight-style { background: var(--red-bg); color: var(--red); }
+  .highlight-tighten { background: var(--yellow-bg); color: var(--yellow); }
+  .highlight-structure { background: var(--blue-bg); color: var(--blue); }
+
+  .highlight.active-highlight { outline: 2px solid currentColor; }
+
+  /* Issues list */
+  .issues-list { list-style: none; }
+
+  .issue-item {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-radius: 4px;
+    border-left: 4px solid var(--gray-border);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .issue-item:hover { background: var(--gray-light); }
+  .issue-item.active-issue { background: var(--gray-light); }
+
+  .issue-item.cat-style { border-left-color: var(--red); }
+  .issue-item.cat-tighten { border-left-color: var(--yellow); }
+  .issue-item.cat-structure { border-left-color: var(--blue); }
+
+  .issue-num {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 0.8rem;
+    width: 1.6em;
+    height: 1.6em;
+    line-height: 1.6em;
+    text-align: center;
+    border-radius: 50%;
+    margin-right: 0.4rem;
+    color: #fff;
+  }
+
+  .cat-style .issue-num { background: var(--red); }
+  .cat-tighten .issue-num { background: var(--yellow); }
+  .cat-structure .issue-num { background: var(--blue); }
+
+  .issue-original {
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    color: #555;
+    margin: 0.3rem 0;
+  }
+
+  .issue-suggestion {
+    font-weight: 600;
+    margin: 0.3rem 0;
+  }
+
+  .issue-explanation {
+    color: #555;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .legend {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.82rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+  }
+
+  .no-issues {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .error-msg {
+    color: var(--red);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .results.visible { grid-template-columns: 1fr; }
+    header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>BDN Style Editor <span>| AP &amp; House Style Checker</span></h1>
+</header>
+
+<div class="container">
+  <div class="input-section">
+    <h2>Paste your copy</h2>
+    <textarea id="copy-input" placeholder="Paste your draft text here..."></textarea>
+    <div class="btn-row">
+      <button class="btn-analyze" id="analyze-btn">Analyze</button>
+      <div class="spinner" id="spinner"></div>
+      <span class="status-msg" id="status-msg"></span>
+    </div>
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="text-panel">
+      <h2>Annotated Text</h2>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--red-bg);border:1px solid var(--red)"></div> Style violation</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--yellow-bg);border:1px solid var(--yellow)"></div> Tighten/clarity</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--blue-bg);border:1px solid var(--blue)"></div> Structure</div>
+      </div>
+      <div class="text-display" id="text-display"></div>
+    </div>
+    <div class="issues-panel">
+      <h2>Issues <span id="issue-count"></span></h2>
+      <ul class="issues-list" id="issues-list"></ul>
+    </div>
+  </div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are a copy editor for the Bangor Daily News. Analyze the submitted text for style violations, tighten/clarity improvements, and structural issues.
+
+## Input Format
+If the first line of the submitted text ends with a pipe character (|), that line is the **headline**. Evaluate it using the BDN Headline Rules below, separately from the body text.
+
+### Headline evaluation (HIGH PRIORITY)
+Headlines are the highest-priority item in the analysis. Evaluate every headline aggressively against the BDN Headline Rules. Flag any violation — weak verbs, missing specificity, red-flag words, commas, jargon, structural problems, headlines that don't answer at least two W's. Use category "style" for headline flags. The conservative rules below (quantity limits, "when in doubt") apply to body copy, not headlines.
+
+If no headline is provided (no pipe on the first line), do NOT flag the absence of a headline.
+
+## BDN Headline Rules
+- Use the strongest verb possible.
+- Be direct, clear and simple. Don't overlitigate with modifiers.
+- Use single quotation marks in headlines.
+- Use numbers instead of spelling them out.
+- Be concise. Omit needless words.
+- Use full names, especially household names, and put names close to the front.
+- No commas in headlines (print relic).
+- No jargon. Audiences should understand the story topic at a glance.
+- No wordplay or puns. The internet is literal. Be clear-eyed and concrete.
+- Don't make headlines so general they're boring. Avoid vague words like "panel," "board," "committee," "facility."
+- Avoid bureaucratic/legalistic words in headlines. Use plain-language alternatives: "moratorium" → "pause" or "ban"; "ordinance" → "rule"; "resolution" → cut it or describe the action.
+- Limit two-sentence or grabby headlines ("This Maine man did a thing") to truly dramatic or surprising stories.
+- Don't give away the whole story in features headlines (breaking news is different).
+- The headline should answer at least two of the five W's (Who, What, When, Where, Why).
+- For government/policy stories, focus on what it means for the audience. Make it personal.
+- **Headline red-flag words** (flag these and suggest rewrites): "some," "slight," "increase/decrease" (use drop/spike/boost/crater), "flap," "at loggerheads," "incident," "group," "potential/potentially," "discussing/talking over," "mulls," "as," "might," "panel," "board," "committee," "facility," "in part," "alter," "affect," "effect," "impact" (never use), "but," "viral" (very high bar), "how/why" as first word (unless a literal how-to), "police investigating" (it's their job), "moratorium" (use "pause," "ban," or "freeze"), "ordinance" (use "rule" or describe the action), "resolution," and cliches like "1-2 punch" or "perfect storm."
+
+Apply these rules in order of priority:
+1. The BDN/AP style rules below
+2. General AP Style as fallback
+
+## BDN Style Rules
+
+### Voice and Tone
+- Write in plain, direct English.
+- Prefer specific language over vague framing.
+- Keep copy disciplined and non-promotional.
+- Avoid inflated adjectives unless directly supported by reporting.
+
+### General Rules
+- Use area codes in all phone numbers.
+- Do not use accent marks, umlauts, or other special characters.
+- Do not write "acres of land"; use constructions like "an 80-acre parcel" or "80 forested acres."
+- Do not use abbreviations or acronyms that are not universally recognizable; prefer a short noun on second reference.
+- Do not use "addicts" or "users"; prefer "addiction" or "alcoholism" over "substance use disorder"; avoid "clean" or generic "harm reduction".
+- Use "first anniversary" or "10th anniversary," not "one-year anniversary."
+- Always lowercase "annual"; never use "first annual."
+- Use "anti-abortion," not "pro-life"; do not describe a fetus as an "unborn child" in news reporting.
+- Avoid "at this time."
+- Attribution: use past tense ("said"); use subject-verb order ("subject said"); keep "said" close to quote; do not start sentences with attribution.
+- Avoid redundant phrasing like "traveling eastbound"; use "eastbound."
+- Use brackets [], not parentheses (), when adding context to a quote.
+- Refer to Canadian communities by town and province; do not add "Canada."
+- Capital is a city; capitol is a building; in Maine use "State House" for where the Legislature meets.
+- Do not use all-caps for business names (e.g., "Lego," not "LEGO").
+- Avoid cliches.
+- Use "compared with" for similarities and differences; use "compared to" to assert similarity.
+- Avoid "could possibly"; "could" already implies possibility.
+- Use "current" only when needed for clarity.
+- Treat "data" as singular ("The data shows...").
+- Use "from 1998 to 2019" or "1998-2019"; never "from 1998-2019."
+- Include day of week with date; use "today" and "tomorrow" when applicable.
+- Always use "Dunkin'."
+- Use "electrocution" only if death occurred; otherwise "electric shock."
+- Use "told the Bangor Daily News" once; for documents use "obtained by the Bangor Daily News."
+- Use "flyer" for people who fly and advertisements.
+- Use "fly tier" for fishing; never "fly tyer."
+- Use "freshman" for sports and politics; for students, use year of study or age.
+- Ask for pronouns; mention transgender status only if relevant.
+- Capitalize "General Assistance" as specific government aid program.
+- Use "Greater Bangor," not "the Greater Bangor area."
+- "Harbor master" is two words.
+- Avoid "the homeless"; mention homelessness only if relevant.
+- Use "hunters breakfast," not hunters' or hunter's breakfast.
+- Do not hyphenate an adverb with another word; use hyphens for compound modifiers only when needed for clarity.
+- Never use "impact" as a verb.
+- Prefer descriptive verbs like "spike," "boost," "drop," "plummet" over "increase/decrease" when accurate.
+- Capitalize Indigenous; use tribal affiliation for specific people; "Wabanaki tribes" is the collective term in Maine.
+- Use "person" or "people" instead of "individual/individuals."
+- LGBTQ+ is preferred acronym; use only when relevant.
+- "Mill rate," not "mil rate."
+- "Millworker" is one word.
+- Use lowercase for offices (e.g., "state fire marshal's office").
+- Omit needless words; avoid "both," "that," and "in order to" where unnecessary.
+- Opiates are poppy-derived; opioids include synthetic products.
+- Use % with numbers; spell out "zero percent."
+- Distinguish percent change from percentage-point difference.
+- Use people-first language.
+- Use "queer" only if the subject identifies as such.
+- Quotes must add value; avoid block quotes; use brackets for clarity.
+- Avoid "racially charged"; describe behavior directly; "racist" may be used when apt.
+- Avoid repetitive use of "reform"; prefer "policy changes" where more precise.
+- Avoid "elderly" and "senior citizen"; use age instead.
+- Avoid semicolons unless separating items in a list; prefer period.
+- Use "gay" or "lesbian"; include only if pertinent; avoid "lifestyle" or "preference."
+- Use "signs," not "signage."
+- Use "spokesperson" instead of spokesman/spokeswoman.
+- Do not call a person "a subject."
+- Follow "Reporting on Suicide" best practices.
+- Use "lower" or "higher" temperatures, not "colder" or "warmer."
+- Format time as: time day, date, place (e.g., "5 p.m. Saturday, July 31").
+- Capitalize titles only before a name.
+- Use quotes for books, songs, albums, movies; no quotes for reference books or most symphonies.
+- Use "toward," not "towards."
+- Use "taken" instead of "transported."
+- Use "victim/survivor" with care; reflect language used by subject.
+- Use "viral" judiciously; "widely shared" is often sufficient.
+- "Walmart" is one word, no hyphen.
+
+### Maine-Specific
+- Use "antlerless deer permits," not "deer permits."
+- Use full name "Bangor Daily News" on first reference; "BDN" subsequently.
+- Aroostook County is "The County" — always capitalize both words, including "The," even mid-sentence.
+- "Down East" is two words, uppercase; refers to Washington County and surrounding areas (includes Baileyville, Calais, Machias, Eastport, Lubec, etc.).
+- Use "Katahdin," not "Mount Katahdin." The mountain is referred to as just "Katahdin" — do NOT add "Mount." If the text already says "Katahdin," it is CORRECT.
+- "MaineCare" is Maine's version of Medicaid.
+- Preferred: "Mainer" over "Maine resident."
+- "midcoast" is one word, lowercase (not capitalized), no hyphen. Write "midcoast Maine," not "Midcoast Maine."
+- "North Woods" is two words, capitalized. This refers to the generic regional term only. "North Maine Woods" is a distinct proper name — it is both a specific geographic region and the name of a nonprofit land management organization. Do not change "North Maine Woods" to "North Woods."
+- Do not use "the" before road names except "the Golden Road."
+
+### Police and Courts
+- Use "attorney" for trial representation; "lawyer" as job description.
+- Use "crashes," not "accidents"; use "suffered" for injuries, not "sustained."
+- Specify the charge; use "suspect" until convicted; avoid double attribution.
+- Uppercase District Court, Superior Court, and U.S. Supreme Court; lowercase "supreme court" for Maine's high court.
+- Use "homicide" or "slaying" until conviction for murder.
+- Use "pleaded," never "pled."
+
+### Politics
+- Uppercase specific community legislative bodies; lowercase general references.
+- Format: "Sen. Debra Plowman, R-Hampden" or "U.S. Sen. Susan Collins, R-Maine."
+
+## Story Structure Check (HIGH PRIORITY)
+
+### Nut graf (MANDATORY CHECK — always perform this)
+You MUST look for a nut graf in every story you analyze. This is not optional.
+
+Every non-breaking news story must have a **nut graf** — a paragraph near the top (within the first 1/5 of the story) that establishes the stakes and tells the reader why this story matters NOW.
+
+A nut graf is NOT background or history. It is the paragraph that bridges the lede to the rest of the story by answering: "So what? Why should I care? Why is this story being written today?" It tells the reader what the writer is up to and delivers a promise of the story's content.
+
+Nut grafs often follow patterns like:
+- "The news marked the first time XXX"
+- "The decision raised questions about XXXX"
+- "It's all part of a recent push..."
+- "It came amid..."
+
+A paragraph that describes what happened previously or gives background context is NOT a nut graf — it's background. The nut graf must establish stakes, significance, or timeliness.
+
+If the story lacks a clear nut graf, you MUST flag it as a "structure" issue. Set "original" to the first sentence of the paragraph where a nut graf should appear, and explain what's missing — what stakes or significance the reader needs. A missing nut graf is one of the most important flags you can raise.
+
+A nut graf in paragraphs 3-6 is correctly placed. Do NOT flag a nut graf for being "too low" if it appears in this range. Only flag placement if the nut graf is buried deep in the story (paragraph 7+). If the story HAS a nut graf in the right spot, do not flag it — move on.
+
+### Attribution problems
+- Do NOT front-load attribution. The news is never that officials are announcing something — the news is the thing that's changing. "Officials announced Wednesday that Portland would close its shelter" should be "Portland will close its shelter, officials said."
+- Do NOT over-attribute. "Police said" is sufficient. It doesn't matter that a police department posted on Facebook or issued a Tuesday press release.
+- Flag stories where multiple consecutive paragraphs begin with "[Name] said" or "Officials said" — this reads like stenography, not journalism.
+
+### Repeated words
+Flag sentences that repeat the same word unnecessarily. If a word appears twice in the same sentence and one instance can be edited out without losing meaning, flag it.
+
+### Other structure issues
+- **Redundant paragraphs**: sections that repeat information already stated earlier in the story. Quote the first sentence of the redundant paragraph and explain what it duplicates.
+- **Sections that could be cut**: paragraphs that add no new information, context, or narrative value. These are prime candidates for trimming a story to length.
+- **Chronology problems**: when the timeline jumps in a way that confuses the reader.
+- **Ledes that try to do too much**: a story can only accomplish one thing. Flag ledes that cram in multiple ideas.
+- **"In other business" paragraphs**: if a meeting story tacks on unrelated agenda items under "in other business" or similar transitions, flag the entire section for removal with "[CUT]". Do NOT copyedit these paragraphs — the fix is to cut them, not to polish them. Each topic deserves its own story or brief.
+
+## Response Format
+
+You MUST return valid JSON and nothing else. Return a JSON object with a single key "issues" containing an array. Each element must have:
+- "original": the exact text span from the input that has the issue (copy verbatim)
+- "category": one of "style", "tighten", or "structure"
+- "suggestion": the corrected/improved text (use "[CUT]" if recommending deletion of a full paragraph/section)
+- "explanation": brief reason for the change
+
+If there are no issues, return: {"issues": []}
+
+Only flag genuine issues. Do not flag correct usage. Be precise with the "original" field — it must be an exact substring of the input text.
+
+BEFORE FLAGGING ANY ISSUE: verify the text actually VIOLATES the rule. Many rules are bidirectional (e.g., "Use X, not Y"). If the text already uses the correct form, do NOT flag it. Read the rule carefully and confirm the text uses the WRONG form before including it in your response. Flagging text that already follows a rule is a serious error.
+
+CRITICAL RULES — YOU MUST FOLLOW THESE. VIOLATIONS ARE UNACCEPTABLE.
+
+1. ONLY flag clear, unambiguous BDN/AP style violations. Do NOT flag editorial preferences or optional improvements. If a sentence is grammatically correct and doesn't violate a specific rule listed above, leave it alone.
+
+2. Quality over quantity. Prioritize substantive flags (missing nut graf, redundant sections, cuttable paragraphs, headline problems) over word-level nitpicks. A good analysis finds the big problems, not a list of trivial tweaks.
+
+3. NEVER question or change pronouns. If the reporter wrote "his," it is "his." Period. Do not suggest checking pronouns based on someone's name. The reporter knows their sources.
+
+4. "Down East" is ALWAYS two words, ALWAYS capitalized. Never write "Downeast." This applies in headlines too. "Down East" is correct as a modifier: "Down East mill" is correct.
+
+5. "[Company] mill/plant/factory" is CORRECT. "Woodland Pulp mill" means "the mill operated by Woodland Pulp." The word "mill" is not part of the company name and is not redundant. Do NOT flag this pattern. Ever.
+
+6. "Bangor Daily News" can appear more than once in a story. The rule is first reference = full name, subsequent = "BDN." But the final paragraph attribution ("inquiries from the Bangor Daily News") is a standard closing formula. Do NOT flag it.
+
+7. Do NOT flag word choices like "following" vs "after" or "LinkedIn page" vs "LinkedIn profile." These are not style violations.
+
+8. Do NOT rewrite sentences that are already clear and direct just because you would phrase them differently. The "tighten" category is for genuinely wordy or unclear text only — at minimum a full clause or sentence, never a single-word or article-level change. Dropping an article ("a"), swapping a name for a pronoun, or removing one modifier is NOT a tighten issue. Do NOT suggest combining two short sentences into one — that is an editorial preference, not a style issue.
+
+9. The pipe character (|) at the end of a headline is a formatting marker from the CMS, not part of the text. Ignore it. Do not flag it.
+
+10. Starting a sentence with "And" or "But" is acceptable, especially in features, sports writing, and conversational copy. Do NOT flag this.
+
+11. For headlines: flag red-flag words from the list, missing W's, commas, jargon, and concrete BDN headline rule violations. Do NOT flag verbs that are simply "not the strongest possible" — only flag verbs that are genuinely weak or vague (e.g., "addresses," "deals with"). A verb like "approves" is concrete and acceptable. Do NOT add information to a headline rewrite that isn't in the original (e.g., adding a timeframe, specifying details). Do NOT rewrite a headline that follows all BDN headline rules. The headline rules do not require a timeframe, location, or any specific W — they require "at least two of the five W's."
+
+12. Do NOT invent style rules. Only flag violations of rules explicitly listed in this prompt or standard AP Style. If a rule is not listed here, it is not a rule.
+
+13. When in doubt, DO NOT FLAG.
+
+14. Do NOT flag comma usage unless it creates genuine ambiguity or violates a specific, named AP rule. Commas after introductory phrases, around parenthetical elements, and before attributive clauses are editorial discretion — not style violations. Never flag the presence or absence of a comma in a quote.
+
+15. Do NOT flag hyphens that are part of proper names. "Can-Am" (the sled dog race), "T-Mobile," and similar branded or proper nouns contain hyphens as part of their name. The hyphenation rule applies to compound modifiers in copy, not to proper nouns.
+
+16. "The County" referring to Aroostook County ALWAYS capitalizes "The" — even mid-sentence. Do NOT suggest lowercasing the T.
+
+17. "North Maine Woods" is the correct name for the specific multi-use area and land management organization in northern Maine. Do NOT change "North Maine Woods" to "North Woods." They are different things. Only flag "North Woods" if it is written as one word or lowercased.
+
+18. PRIORITIZE structure over word-level tighten. If a story has redundant paragraphs or a missing nut graf, those are more important than any single-word edit. Flag the big stuff first.
+
+19. If a paragraph or section should be CUT entirely (e.g., "in other business," redundant sections), flag it ONLY as a structure issue with suggestion "[CUT]". Do NOT also flag style or tighten issues within text you are recommending for deletion — that is wasted effort.`;
+
+// ---- CONFIGURATION ----
+// After deploying the Cloudflare Worker, paste its URL here:
+const WORKER_URL = '/api';
+
+// DOM refs
+const copyInput = document.getElementById('copy-input');
+const analyzeBtn = document.getElementById('analyze-btn');
+const spinner = document.getElementById('spinner');
+const statusMsg = document.getElementById('status-msg');
+const errorMsg = document.getElementById('error-msg');
+const resultsDiv = document.getElementById('results');
+const textDisplay = document.getElementById('text-display');
+const issuesList = document.getElementById('issues-list');
+const issueCount = document.getElementById('issue-count');
+
+analyzeBtn.addEventListener('click', analyze);
+
+async function analyze() {
+  const text = copyInput.value.trim();
+
+  errorMsg.textContent = '';
+
+  if (!text) {
+    errorMsg.textContent = 'Please paste some text to analyze.';
+    return;
+  }
+
+  analyzeBtn.disabled = true;
+  spinner.classList.add('active');
+  statusMsg.textContent = 'Analyzing copy...';
+  resultsDiv.classList.remove('visible');
+
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6-20250514',
+        max_tokens: 4096,
+        system: SYSTEM_PROMPT,
+        messages: [
+          { role: 'user', content: `Analyze this copy for BDN/AP style issues:\n\n${text}` }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const errBody = await response.json().catch(() => null);
+      const detail = errBody?.error?.message || response.statusText;
+      throw new Error(`API error (${response.status}): ${detail}`);
+    }
+
+    const data = await response.json();
+    const content = data.content?.[0]?.text || '';
+
+    // Parse JSON from response — handle markdown code fences
+    let jsonStr = content;
+    const fenceMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fenceMatch) jsonStr = fenceMatch[1];
+
+    const parsed = JSON.parse(jsonStr.trim());
+    const issues = (parsed.issues || []).filter(issue => {
+      // Drop flags where the suggestion is already in the original (rule applied backwards)
+      if (!issue.original || !issue.suggestion) return true;
+      if (issue.suggestion === '[CUT]') return true;
+      const suggestionCore = issue.suggestion.trim().toLowerCase();
+      const originalCore = issue.original.trim().toLowerCase();
+      if (suggestionCore === originalCore) return false;
+      // Drop if the "fix" is already present verbatim in the source text
+      if (text.includes(issue.suggestion.trim())) return false;
+      return true;
+    });
+
+    renderResults(text, issues);
+    statusMsg.textContent = `Found ${issues.length} issue${issues.length !== 1 ? 's' : ''}.`;
+  } catch (err) {
+    errorMsg.textContent = err.message;
+    statusMsg.textContent = '';
+  } finally {
+    analyzeBtn.disabled = false;
+    spinner.classList.remove('active');
+  }
+}
+
+function renderResults(text, issues) {
+  resultsDiv.classList.add('visible');
+  issuesList.innerHTML = '';
+  issueCount.textContent = `(${issues.length})`;
+
+  if (issues.length === 0) {
+    textDisplay.textContent = text;
+    issuesList.innerHTML = '<li class="no-issues">No style issues found.</li>';
+    return;
+  }
+
+  // Build highlight spans — sort by position in text, handle overlaps by skipping
+  const mapped = [];
+  for (let i = 0; i < issues.length; i++) {
+    const issue = issues[i];
+    const idx = text.indexOf(issue.original);
+    if (idx === -1) continue;
+    mapped.push({ ...issue, start: idx, end: idx + issue.original.length, num: mapped.length + 1 });
+  }
+
+  // Sort by start position
+  mapped.sort((a, b) => a.start - b.start);
+
+  // Remove overlaps
+  const clean = [];
+  let lastEnd = 0;
+  for (const m of mapped) {
+    if (m.start >= lastEnd) {
+      clean.push(m);
+      lastEnd = m.end;
+    }
+  }
+
+  // Renumber
+  clean.forEach((c, i) => c.num = i + 1);
+
+  // Build annotated HTML
+  let html = '';
+  let pos = 0;
+  for (const c of clean) {
+    if (c.start > pos) {
+      html += escapeHtml(text.slice(pos, c.start));
+    }
+    const cls = `highlight highlight-${c.category}`;
+    html += `<span class="${cls}" data-issue="${c.num}">${escapeHtml(text.slice(c.start, c.end))}</span>`;
+    pos = c.end;
+  }
+  if (pos < text.length) html += escapeHtml(text.slice(pos));
+
+  textDisplay.innerHTML = html;
+
+  // Build issues list
+  issueCount.textContent = `(${clean.length})`;
+  for (const c of clean) {
+    const catLabel = c.category === 'style' ? 'Style' : c.category === 'tighten' ? 'Tighten' : 'Structure';
+    const li = document.createElement('li');
+    li.className = `issue-item cat-${c.category}`;
+    li.dataset.issue = c.num;
+    li.innerHTML = `
+      <div><span class="issue-num">${c.num}</span> <strong>${catLabel}</strong></div>
+      <div class="issue-original">"${escapeHtml(c.original)}"</div>
+      <div class="issue-suggestion">&rarr; ${escapeHtml(c.suggestion)}</div>
+      <div class="issue-explanation">${escapeHtml(c.explanation)}</div>
+    `;
+    li.addEventListener('click', () => scrollToHighlight(c.num));
+    issuesList.appendChild(li);
+  }
+
+  // Click highlights to scroll to issue
+  textDisplay.querySelectorAll('.highlight').forEach(el => {
+    el.addEventListener('click', () => {
+      const num = el.dataset.issue;
+      const target = issuesList.querySelector(`[data-issue="${num}"]`);
+      if (target) {
+        clearActive();
+        target.classList.add('active-issue');
+        el.classList.add('active-highlight');
+        target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+  });
+}
+
+function scrollToHighlight(num) {
+  clearActive();
+  const hl = textDisplay.querySelector(`[data-issue="${num}"]`);
+  const li = issuesList.querySelector(`li[data-issue="${num}"]`);
+  if (hl) {
+    hl.classList.add('active-highlight');
+    hl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  if (li) li.classList.add('active-issue');
+}
+
+function clearActive() {
+  document.querySelectorAll('.active-highlight').forEach(el => el.classList.remove('active-highlight'));
+  document.querySelectorAll('.active-issue').forEach(el => el.classList.remove('active-issue'));
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>
