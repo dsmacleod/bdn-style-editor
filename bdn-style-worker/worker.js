@@ -95,6 +95,7 @@ const CORS_ALLOWED_ORIGINS = new Set([
   'https://www.bangordailynews.com',
   'https://bangordailynews.com',
   'https://staging.bangordailynews.com',
+  'https://bangordailynews-mar2025.newspackstaging.com',
 ]);
 
 function corsHeadersFor(request) {
