@@ -3,8 +3,17 @@ main = "worker.js"
 compatibility_date = "2024-01-01"
 
 rules = [
-  { type = "Text", globs = ["**/*.html"] }
+  { type = "Text", globs = ["**/*.html", "**/*.md"], fallthrough = true }
 ]
 
-# The CLAUDE_API_KEY secret is added via:
-#   wrangler secret put CLAUDE_API_KEY
+# Secrets (set via `wrangler secret put <NAME>`):
+#   CLAUDE_API_KEY  — Anthropic API key
+#   ACCESS_TOKEN    — shared token required in the x-bdn-token header on /api
+
+[[kv_namespaces]]
+binding = "BDN_STYLE_RL"
+id = "9837aff150f14525ac1c0081bff1d200"
+
+[vars]
+RATE_LIMIT_PER_MIN = "20"
+RATE_LIMIT_PER_DAY = "300"
